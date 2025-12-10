@@ -32,7 +32,7 @@
 
 ```bash
 # Клонируй репозиторий
-git clone https://github.com/YOUR_USERNAME/trading-calculator.git
+git clone https://github.com/jeckside/trading-calculator.git
 cd trading-calculator
 
 # Установи зависимости
@@ -65,10 +65,6 @@ python -m PyInstaller --onefile --windowed --name "TradingCalculator" calculator
 - Тейк-профит
 - Размер позиции
 - Риск и потенциальную прибыль в $
-
-## Скриншот
-
-![Trading Calculator](screenshot.png)
 
 ## Лицензия
 
