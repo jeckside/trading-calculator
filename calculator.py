@@ -32,13 +32,12 @@ class TradingCalculator(ctk.CTk):
             "border": "#30363d"
         }
         
-        # Параметры по таймфреймам
+        # Параметры по таймфреймам (включая R:R)
         self.tf_params = {
-            "1h": {"entry_pct": 25, "stop_pct": 6},
-            "2h": {"entry_pct": 22, "stop_pct": 15},
-            "4h": {"entry_pct": 22, "stop_pct": 6}
+            "1h": {"entry_pct": 22, "stop_pct": 8, "rr": 1.7},
+            "2h": {"entry_pct": 23, "stop_pct": 6, "rr": 1.7},
+            "4h": {"entry_pct": 22, "stop_pct": 8, "rr": 2.0}
         }
-        self.rr_ratio = 1.8
         
         self.configure(fg_color=self.colors["bg_dark"])
         self._create_ui()
@@ -378,18 +377,18 @@ class TradingCalculator(ctk.CTk):
                 text_color=self.colors["accent"]
             ).pack(anchor="w")
             
-            # Поля ввода
+            # Поля ввода (3 колонки: Вход, Стоп, R:R)
             fields_frame = ctk.CTkFrame(inner, fg_color="transparent")
             fields_frame.pack(fill="x", pady=(8, 0))
-            fields_frame.grid_columnconfigure((0, 1), weight=1)
+            fields_frame.grid_columnconfigure((0, 1, 2), weight=1)
             
             # Вход %
             entry_frame = ctk.CTkFrame(fields_frame, fg_color="transparent")
-            entry_frame.grid(row=0, column=0, padx=(0, 10), sticky="ew")
+            entry_frame.grid(row=0, column=0, padx=(0, 5), sticky="ew")
             
             ctk.CTkLabel(
-                entry_frame, text="Вход от верха зоны %",
-                font=ctk.CTkFont(size=11),
+                entry_frame, text="Вход %",
+                font=ctk.CTkFont(size=10),
                 text_color=self.colors["text_dim"]
             ).pack(anchor="w")
             
@@ -403,11 +402,11 @@ class TradingCalculator(ctk.CTk):
             
             # Стоп %
             stop_frame = ctk.CTkFrame(fields_frame, fg_color="transparent")
-            stop_frame.grid(row=0, column=1, sticky="ew")
+            stop_frame.grid(row=0, column=1, padx=5, sticky="ew")
             
             ctk.CTkLabel(
-                stop_frame, text="Стоп от края зоны %",
-                font=ctk.CTkFont(size=11),
+                stop_frame, text="Стоп %",
+                font=ctk.CTkFont(size=10),
                 text_color=self.colors["text_dim"]
             ).pack(anchor="w")
             
@@ -419,37 +418,25 @@ class TradingCalculator(ctk.CTk):
             stop_pct.pack(fill="x")
             stop_pct.insert(0, str(self.tf_params[tf]["stop_pct"]))
             
-            self.settings_entries[tf] = {"entry": entry_pct, "stop": stop_pct}
-        
-        # R:R настройка
-        rr_card = ctk.CTkFrame(main, fg_color=self.colors["bg_card"], corner_radius=10)
-        rr_card.pack(fill="x", pady=(0, 15))
-        
-        rr_inner = ctk.CTkFrame(rr_card, fg_color="transparent")
-        rr_inner.pack(fill="x", padx=15, pady=12)
-        
-        ctk.CTkLabel(
-            rr_inner, text="Risk/Reward (R:R)",
-            font=ctk.CTkFont(family="Segoe UI", size=14, weight="bold"),
-            text_color=self.colors["yellow"]
-        ).pack(anchor="w")
-        
-        rr_frame = ctk.CTkFrame(rr_inner, fg_color="transparent")
-        rr_frame.pack(fill="x", pady=(8, 0))
-        
-        ctk.CTkLabel(
-            rr_frame, text="1 :",
-            font=ctk.CTkFont(size=14, weight="bold"),
-            text_color=self.colors["text"]
-        ).pack(side="left")
-        
-        self.rr_entry = ctk.CTkEntry(
-            rr_frame, width=80, height=32, corner_radius=6,
-            fg_color="#0d1117", border_color=self.colors["border"],
-            text_color=self.colors["text"]
-        )
-        self.rr_entry.pack(side="left", padx=(5, 0))
-        self.rr_entry.insert(0, str(self.rr_ratio))
+            # R:R
+            rr_frame = ctk.CTkFrame(fields_frame, fg_color="transparent")
+            rr_frame.grid(row=0, column=2, padx=(5, 0), sticky="ew")
+            
+            ctk.CTkLabel(
+                rr_frame, text="R:R (1:X)",
+                font=ctk.CTkFont(size=10),
+                text_color=self.colors["yellow"]
+            ).pack(anchor="w")
+            
+            rr_entry = ctk.CTkEntry(
+                rr_frame, height=32, corner_radius=6,
+                fg_color="#0d1117", border_color=self.colors["border"],
+                text_color=self.colors["text"]
+            )
+            rr_entry.pack(fill="x")
+            rr_entry.insert(0, str(self.tf_params[tf]["rr"]))
+            
+            self.settings_entries[tf] = {"entry": entry_pct, "stop": stop_pct, "rr": rr_entry}
         
         # Кнопки
         btn_frame = ctk.CTkFrame(main, fg_color="transparent")
@@ -477,11 +464,10 @@ class TradingCalculator(ctk.CTk):
     def reset_to_defaults(self):
         """Сбросить настройки по умолчанию"""
         defaults = {
-            "1h": {"entry_pct": 25, "stop_pct": 6},
-            "2h": {"entry_pct": 22, "stop_pct": 15},
-            "4h": {"entry_pct": 22, "stop_pct": 6}
+            "1h": {"entry_pct": 22, "stop_pct": 8, "rr": 1.7},
+            "2h": {"entry_pct": 23, "stop_pct": 6, "rr": 1.7},
+            "4h": {"entry_pct": 22, "stop_pct": 8, "rr": 2.0}
         }
-        default_rr = 1.8
         
         # Обновляем поля в окне настроек
         for tf in ["1h", "2h", "4h"]:
@@ -490,9 +476,9 @@ class TradingCalculator(ctk.CTk):
             
             self.settings_entries[tf]["stop"].delete(0, "end")
             self.settings_entries[tf]["stop"].insert(0, str(defaults[tf]["stop_pct"]))
-        
-        self.rr_entry.delete(0, "end")
-        self.rr_entry.insert(0, str(default_rr))
+            
+            self.settings_entries[tf]["rr"].delete(0, "end")
+            self.settings_entries[tf]["rr"].insert(0, str(defaults[tf]["rr"]))
     
     def save_settings(self, window):
         """Сохранить настройки"""
@@ -500,17 +486,14 @@ class TradingCalculator(ctk.CTk):
             for tf in ["1h", "2h", "4h"]:
                 entry_val = float(self.settings_entries[tf]["entry"].get().replace(",", "."))
                 stop_val = float(self.settings_entries[tf]["stop"].get().replace(",", "."))
+                rr_val = float(self.settings_entries[tf]["rr"].get().replace(",", "."))
                 
-                if entry_val <= 0 or stop_val <= 0:
-                    raise ValueError("Значения должны быть > 0")
+                if entry_val <= 0 or stop_val <= 0 or rr_val <= 0:
+                    raise ValueError("Все значения должны быть > 0")
                 
                 self.tf_params[tf]["entry_pct"] = entry_val
                 self.tf_params[tf]["stop_pct"] = stop_val
-            
-            rr_val = float(self.rr_entry.get().replace(",", "."))
-            if rr_val <= 0:
-                raise ValueError("R:R должен быть > 0")
-            self.rr_ratio = rr_val
+                self.tf_params[tf]["rr"] = rr_val
             
             window.destroy()
             
@@ -596,19 +579,21 @@ class TradingCalculator(ctk.CTk):
         # Размер зоны = 100%
         zone_size = zone_high - zone_low
         
+        rr_ratio = params["rr"]
+        
         if is_long:
             # LONG: входим ниже верхней границы, стоп ниже нижней, тейк вверх
             entry_price = zone_high - (zone_size * params["entry_pct"] / 100)
             stop_price = zone_low - (zone_size * params["stop_pct"] / 100)
             stop_distance = entry_price - stop_price
-            take_distance = stop_distance * self.rr_ratio
+            take_distance = stop_distance * rr_ratio
             take_price = entry_price + take_distance
         else:
             # SHORT: входим выше нижней границы, стоп выше верхней, тейк вниз
             entry_price = zone_low + (zone_size * params["entry_pct"] / 100)
             stop_price = zone_high + (zone_size * params["stop_pct"] / 100)
             stop_distance = stop_price - entry_price
-            take_distance = stop_distance * self.rr_ratio
+            take_distance = stop_distance * rr_ratio
             take_price = entry_price - take_distance
         
         # Размер позиции
@@ -629,7 +614,7 @@ class TradingCalculator(ctk.CTk):
         
         self.lbl_risk_usd.configure(text=f"${risk_usd:,.2f}")
         self.lbl_profit_usd.configure(text=f"${profit_usd:,.2f}")
-        self.lbl_rr.configure(text=f"1:{self.rr_ratio}")
+        self.lbl_rr.configure(text=f"1:{rr_ratio}")
 
 
 if __name__ == "__main__":
